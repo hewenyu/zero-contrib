@@ -10,14 +10,16 @@ import (
 	"github.com/zeromicro/go-zero/core/mapping"
 )
 
+// 链接重定义
 type target struct {
-	Addr        string        `key:",optional"`
-	User        string        `key:",optional"`
-	Password    string        `key:",optional"`
-	Service     string        `key:",optional"`
-	GroupName   string        `key:",optional"`
-	Clusters    []string      `key:",optional"`
-	NamespaceID string        `key:"namespaceid,optional"`
+	Addr        string        `key:"addr,optional"`
+	User        string        `key:"user,optional"`
+	Password    string        `key:"password,optional"`
+	AppName     string        `key:"app_name,optional"`
+	Service     string        `key:"service,optional"`
+	GroupName   string        `key:"group_name,optional"`
+	Clusters    []string      `key:"clusters,optional"`
+	NamespaceID string        `key:"namespace_id,optional"`
 	Timeout     time.Duration `key:"timeout,optional"`
 
 	LogLevel string `key:",optional"`
@@ -26,11 +28,16 @@ type target struct {
 }
 
 //  parseURL with parameters
-func parseURL(rawURL url.URL) (target, error) {
+func parseURL(u string) (target, error) {
+	rawURL, err := url.Parse(u)
+	if err != nil {
+		return target{}, errors.Wrap(err, "Malformed URL")
+	}
+
 	if rawURL.Scheme != schemeName ||
 		len(rawURL.Host) == 0 || len(strings.TrimLeft(rawURL.Path, "/")) == 0 {
 		return target{},
-			errors.Errorf("Malformed URL('%s'). Must be in the next format: 'nacos://[user:passwd]@host/service?param=value'", rawURL.String())
+			errors.Errorf("Malformed URL('%s'). Must be in the next format: 'nacos://[user:passwd]@host/service?param=value'", u)
 	}
 
 	var tgt target
@@ -39,7 +46,7 @@ func parseURL(rawURL url.URL) (target, error) {
 		params[name] = value[0]
 	}
 
-	err := mapping.UnmarshalKey(params, &tgt)
+	err = mapping.UnmarshalKey(params, &tgt)
 	if err != nil {
 		return target{}, errors.Wrap(err, "Malformed URL parameters")
 	}

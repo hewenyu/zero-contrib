@@ -3,13 +3,14 @@ package nacos
 import (
 	"context"
 	"fmt"
-	"github.com/nacos-group/nacos-sdk-go/clients"
-	"github.com/nacos-group/nacos-sdk-go/common/constant"
-	"github.com/nacos-group/nacos-sdk-go/vo"
-	"github.com/pkg/errors"
-	"google.golang.org/grpc/resolver"
 	"net"
 	"strconv"
+
+	"github.com/nacos-group/nacos-sdk-go/v2/clients"
+	"github.com/nacos-group/nacos-sdk-go/v2/common/constant"
+	"github.com/nacos-group/nacos-sdk-go/v2/vo"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/resolver"
 )
 
 func init() {
@@ -23,8 +24,10 @@ const schemeName = "nacos"
 // builder implements resolver.Builder and use for constructing all consul resolvers
 type builder struct{}
 
+// Build 构造
 func (b *builder) Build(url resolver.Target, conn resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	tgt, err := parseURL(url.URL)
+	dsn := url.URL.Scheme + "://" + url.URL.Host + url.URL.RequestURI()
+	tgt, err := parseURL(dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "Wrong nacos URL")
 	}
@@ -40,10 +43,12 @@ func (b *builder) Build(url resolver.Target, conn resolver.ClientConn, opts reso
 	}
 
 	cc := &constant.ClientConfig{
-		NamespaceId: tgt.NamespaceID,
-		Username:    tgt.User,
-		Password:    tgt.Password,
-		TimeoutMs:   uint64(tgt.Timeout),
+		AppName:             tgt.AppName,         // 订阅者名称，显示在 Nacos UI 中
+		NamespaceId:         tgt.NamespaceID,     // NameSpaceID，显示在 Nacos UI 中
+		Username:            tgt.User,            // 账号，Nacos 登录使用
+		Password:            tgt.Password,        // 密码  Nacos 登录使用
+		TimeoutMs:           uint64(tgt.Timeout), // timout
+		NotLoadCacheAtStart: true,
 	}
 
 	if tgt.CacheDir != "" {
