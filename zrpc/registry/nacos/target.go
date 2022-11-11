@@ -14,6 +14,7 @@ import (
 type target struct {
 	Addr        string        `key:"addr,optional"`
 	User        string        `key:"user,optional"`
+	Grpc        string        `key:"grpc,optional"`
 	Password    string        `key:"password,optional"`
 	AppName     string        `key:"app_name,optional"`
 	Service     string        `key:"service,optional"`
